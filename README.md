@@ -1,3 +1,6 @@
+[![Build Status](https://drone.stackdot.com/api/badges/Polygon-io/gnatsd/status.svg)](https://drone.stackdot.com/Polygon-io/gnatsd)
+
+
 ##<img src="logos/nats-server.png" width="300">
 [![License][License-Image]][License-Url] [![ReportCard][ReportCard-Image]][ReportCard-Url] [![Build][Build-Status-Image]][Build-Status-Url] [![Release][Release-Image]][Release-Url] [![Coverage][Coverage-Image]][Coverage-Url]
 

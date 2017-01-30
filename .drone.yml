@@ -1,0 +1,35 @@
+
+
+workspace:
+  base: /go/src/
+  path: github.com/polygon-io/gnatsd
+
+
+pipeline:
+
+  # Build static assets:
+  compile:
+    image: docker.stackdot.com/lib/go-glide:latest
+    pull: true
+    commands:
+      - glide install
+      - CGO_ENABLED=0 GOOS=linux go build -a -tags netgo -ldflags '-w' .
+
+
+  # Build docker image:
+  docker:
+    image: plugins/docker
+    repo: docker.stackdot.com/polygon/gnatsd
+    tag:
+      - '${DRONE_BRANCH/master/latest}'
+      - '${DRONE_BRANCH}.build-${DRONE_BUILD_NUMBER}'
+    storage_driver: overlay
+    when:
+      branch: master
+
+  # Deploy latest to Kubernetes:
+  # deploy:
+  #   image: vallard/drone-kube
+  #   template: kube.yml
+  #   when:
+  #     branch: master
