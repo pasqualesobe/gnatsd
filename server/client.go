@@ -223,6 +223,7 @@ func (c *client) initClient() {
 // with the authenticated user. This is used to map any permissions
 // into the client.
 func (c *client) RegisterUser(user *User) {
+	fmt.Println("Register User")
 	if user.Permissions == nil {
 		return
 	}

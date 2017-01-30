@@ -16,7 +16,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/nats-io/gnatsd/server"
+	"github.com/polygon-io/gnatsd/server"
 )
 
 const clientProtoInfo = 1

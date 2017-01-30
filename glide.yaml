@@ -1,0 +1,29 @@
+package: github.com/polygon-io/gnatsd
+import:
+- package: github.com/nats-io/nuid
+  version: ^1.0.0
+  repo: https://github.com/nats-io/nuid
+- package: golang.org/x/crypto
+  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
+  repo: https://go.googlesource.com/crypto
+  subpackages:
+  - bcrypt
+  - blowfish
+- package: golang.org/x/sys
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  repo: https://go.googlesource.com/sys
+  subpackages:
+  - windows
+  - windows/svc/eventlog
+- package: github.com/nats-io/gnatsd
+  version: ^0.9.6
+  subpackages:
+  - auth
+  - conf
+  - logger
+  - server
+  - server/pse
+  - util
+testImport:
+- package: github.com/nats-io/go-nats
+  version: ^1.2.2

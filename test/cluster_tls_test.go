@@ -5,7 +5,7 @@ package test
 import (
 	"testing"
 
-	"github.com/nats-io/gnatsd/server"
+	"github.com/polygon-io/gnatsd/server"
 )
 
 func runTLSServers(t *testing.T) (srvA, srvB *server.Server, optsA, optsB *server.Options) {

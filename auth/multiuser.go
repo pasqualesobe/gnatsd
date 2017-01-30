@@ -3,7 +3,7 @@
 package auth
 
 import (
-	"github.com/nats-io/gnatsd/server"
+	"github.com/polygon-io/gnatsd/server"
 	"golang.org/x/crypto/bcrypt"
 )
 

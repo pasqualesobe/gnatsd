@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nats-io/gnatsd/server"
+	"github.com/polygon-io/gnatsd/server"
 )
 
 func runSeedServer(t *testing.T) (*server.Server, *server.Options) {

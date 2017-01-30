@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nats-io/gnatsd/conf"
+	"github.com/polygon-io/gnatsd/conf"
 )
 
 // For multiple accounts/users.
@@ -59,6 +59,7 @@ type Options struct {
 	Username       string        `json:"-"`
 	Password       string        `json:"-"`
 	Authorization  string        `json:"-"`
+	Endpoint       string        `json:"-"`
 	PingInterval   time.Duration `json:"ping_interval"`
 	MaxPingsOut    int           `json:"ping_max"`
 	HTTPHost       string        `json:"http_host"`
@@ -88,6 +89,7 @@ type Options struct {
 // Configuration file authorization section.
 type authorization struct {
 	// Singles
+	endpoint string
 	user string
 	pass string
 	// Multiple Users
@@ -172,8 +174,13 @@ func ProcessConfigFile(configFile string) (*Options, error) {
 			if err != nil {
 				return nil, err
 			}
-			opts.Username = auth.user
-			opts.Password = auth.pass
+			if auth.endpoint != "" {
+				opts.Endpoint = auth.endpoint	
+			}else{
+				opts.Username = auth.user
+				opts.Password = auth.pass
+			}
+			
 			opts.AuthTimeout = auth.timeout
 			// Check for multiple users defined
 			if auth.users != nil {
@@ -336,6 +343,8 @@ func parseAuthorization(am map[string]interface{}) (*authorization, error) {
 	auth := &authorization{}
 	for mk, mv := range am {
 		switch strings.ToLower(mk) {
+		case "endpoint":
+			auth.endpoint = mv.(string)
 		case "user", "username":
 			auth.user = mv.(string)
 		case "pass", "password":
