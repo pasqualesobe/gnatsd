@@ -189,27 +189,21 @@ func main() {
 func configureAuth(s *server.Server, opts *server.Options) {
 	// Client
 	// Check for multiple users first
-	fmt.Println("Config:", opts)
 	if opts.Users != nil {
-		fmt.Println("Multiuser Auth")
 		auth := auth.NewMultiUser(opts.Users)
 		s.SetClientAuthMethod(auth)
 	} else if opts.Username != "" {
-		fmt.Println("PLAIN auth")
 		auth := &auth.Plain{
 			Username: opts.Username,
 			Password: opts.Password,
 		}
 		s.SetClientAuthMethod(auth)
 	} else if opts.Authorization != "" {
-		fmt.Println("Auth elseif")
 		auth := &auth.Token{
 			Token: opts.Authorization,
 		}
 		s.SetClientAuthMethod(auth)
 	}else if opts.Endpoint != "" {
-		fmt.Println("--- Endpoint Auth ---")
-		fmt.Println("Endpoint:", opts.Endpoint)
 		auth := auth.NewEndpointAuth(opts.Endpoint)
 		s.SetClientAuthMethod(auth)
 	}

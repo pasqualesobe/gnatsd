@@ -180,7 +180,6 @@ func ProcessConfigFile(configFile string) (*Options, error) {
 				opts.Username = auth.user
 				opts.Password = auth.pass
 			}
-			
 			opts.AuthTimeout = auth.timeout
 			// Check for multiple users defined
 			if auth.users != nil {

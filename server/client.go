@@ -147,6 +147,8 @@ func (c *client) GetOpts() *clientOpts {
 	return &c.opts
 }
 
+
+
 // GetTLSConnectionState returns the TLS ConnectionState if TLS is enabled, nil
 // otherwise. Implements the ClientAuth interface.
 func (c *client) GetTLSConnectionState() *tls.ConnectionState {
@@ -223,7 +225,7 @@ func (c *client) initClient() {
 // with the authenticated user. This is used to map any permissions
 // into the client.
 func (c *client) RegisterUser(user *User) {
-	fmt.Println("Register User")
+
 	if user.Permissions == nil {
 		return
 	}
@@ -231,6 +233,11 @@ func (c *client) RegisterUser(user *User) {
 	// Process Permissions and map into client connection structures.
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	// If the endpoint defined the Username, set it here:
+	if user.Username != "" {
+		c.opts.Username = user.Username
+	}
 
 	// Pre-allocate all to simplify checks later.
 	c.perms = &permissions{}

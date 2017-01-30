@@ -11,29 +11,22 @@ import (
 	"github.com/polygon-io/gnatsd/server"
 )
 
-// Plain authentication is a basic username and password
+// Auth using endpoint API
 type EndpointAuth struct {
 	Endpoint 	string
 }
 
-
-type EndpointResp struct {
-	Permissions		*server.Permissions		`json:"permissions"`
-}
-
-// Create a new multi-user
 func NewEndpointAuth( endpoint string ) *EndpointAuth {
 	m := &EndpointAuth{Endpoint: endpoint}
 	return m
 }
 
-// Check authenticates the client using a username and password against a list of multiple users.
+// Check authenticates the client using remote HTTP(S) endpoint
 func (m *EndpointAuth) Check(c server.ClientAuth) bool {
 	opts := c.GetOpts()
 	
 	// If client has no token, cant authenticate
 	if opts.Authorization == "" {
-		// fmt.Println("No token..")
 		return false
 	}
 
@@ -45,7 +38,7 @@ func (m *EndpointAuth) Check(c server.ClientAuth) bool {
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req); if err != nil {
-		// fmt.Println("Authorization Endpoint Error (HTTP call to auth service errored)")
+		// Authorization Endpoint Error (HTTP call to auth service errored)
 		return false
 	}
 	defer resp.Body.Close()
@@ -60,8 +53,11 @@ func (m *EndpointAuth) Check(c server.ClientAuth) bool {
 	user := server.User{}
 	body, _ := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal([]byte(body), &user); if err != nil {
-		// fmt.Println("Error parsing permissions")
+		// Error parsing permissions
 	}
+
+	// If endpoint specified Username, set it on the connection:
+	// fmt.Println("username:", user.Username)
 
 	// Register user and allow connection
 	c.RegisterUser(&user)
