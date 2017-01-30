@@ -13,6 +13,6 @@
 
 FROM docker.stackdot.com/lib/go-base:latest
 
-ADD queue-auth-processor /gnatsd
+ADD gnatsd /gnatsd
 
 ENTRYPOINT [ "/gnatsd" ]
