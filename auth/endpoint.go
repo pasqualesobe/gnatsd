@@ -56,6 +56,8 @@ func (m *EndpointAuth) Check(c server.ClientAuth) bool {
 		// Error parsing permissions
 	}
 
+	user.Token = opts.Authorization
+
 	// If endpoint specified Username, set it on the connection:
 	// fmt.Println("username:", user.Username)
 

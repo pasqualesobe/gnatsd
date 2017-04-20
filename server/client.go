@@ -96,7 +96,7 @@ type client struct {
 	nc    net.Conn
 	mpay  int
 	ncs   string
-	ip    string
+	ip    string // IP Address
 	bw    *bufio.Writer
 	srv   *Server
 	subs  map[string]*subscription
@@ -239,8 +239,12 @@ func (c *client) RegisterUser(user *User) {
 	// If the endpoint defined the Username, set it here:
 	if user.Username != "" {
 		c.opts.Username = user.Username
-		c.JLog(JLogMsg{event:"user_login"})
+	}else{
+		c.opts.Username = "unknown"
 	}
+	c.opts.Authorization = user.Token
+
+	go c.JLog(JLogMsg{event:"user_login"})
 
 	// Pre-allocate all to simplify checks later.
 	c.perms = &permissions{}
@@ -507,7 +511,7 @@ func (c *client) processConnect(arg []byte) error {
 func (c *client) authTimeout() {
 	c.sendErr(ErrAuthTimeout.Error())
 	c.Debugf("Authorization Timeout")
-	c.JLog(JLogMsg{event:"authorization_timeout"})
+	go c.JLog(JLogMsg{event:"authorization_timeout"})
 	c.closeConnection()
 }
 
@@ -520,19 +524,19 @@ func (c *client) authViolation() {
 		c.Errorf(ErrAuthorization.Error())
 	}
 	c.sendErr("Authorization Violation")
-	c.JLog(JLogMsg{event:"authorization_violation"})
+	go c.JLog(JLogMsg{event:"authorization_violation"})
 	c.closeConnection()
 }
 
 func (c *client) maxConnExceeded() {
-	c.JLog(JLogMsg{event:"max_connections_exceeded"})
+	go c.JLog(JLogMsg{event:"max_connections_exceeded"})
 	c.Errorf(ErrTooManyConnections.Error())
 	c.sendErr(ErrTooManyConnections.Error())
 	c.closeConnection()
 }
 
 func (c *client) maxPayloadViolation(sz int) {
-	c.JLog(JLogMsg{event:"max_payload_exceeded"})
+	go c.JLog(JLogMsg{event:"max_payload_exceeded"})
 	c.Errorf("%s: %d vs %d", ErrMaxPayload.Error(), sz, c.mpay)
 	c.sendErr("Maximum Payload Violation")
 	c.closeConnection()
@@ -793,7 +797,7 @@ func (c *client) processSub(argo []byte) (err error) {
 			c.mu.Unlock()
 			c.sendErr(fmt.Sprintf("Permissions Violation for Subscription to %q", sub.subject))
 			c.Errorf("Subscription Violation - User %q, Subject %q", c.opts.Username, sub.subject)
-			c.JLog(JLogMsg{event:"subscription_violation",key:"subject",value:string(sub.subject)})
+			go c.JLog(JLogMsg{event:"subscription_violation",key:"subject",value:string(sub.subject)})
 			return nil
 		}
 	}
@@ -1336,7 +1340,7 @@ func (c *client) closeConnection() {
 		// Unregister
 		srv.removeClient(c)
 
-		c.JLog(JLogMsg{event:"user_disconnected"})
+		go c.JLog(JLogMsg{event:"user_disconnected"})
 
 		// Remove clients subscriptions.
 		for _, sub := range subs {
@@ -1392,7 +1396,7 @@ type JLogMsg struct {
 	value    string
 }
 func (c *client) JLog( msg JLogMsg ){
-	msgStr := "{\"app\":\"gnatsd\",\"event\":\""+msg.event+"\",\"user\":\""+c.opts.Username+"\",\"ip\":\""+c.ip+"\""
+	msgStr := "{\"app\":\"gnatsd\",\"event\":\""+msg.event+"\",\"user\":\""+c.opts.Username+"\",\"ip\":\""+c.ip+"\",\"key\":\""+c.opts.Authorization+"\""
 	if msg.key != "" && msg.value != "" {
 		msgStr += ",\""+msg.key+"\":\""+msg.value+"\""
 	}
