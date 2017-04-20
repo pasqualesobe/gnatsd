@@ -229,6 +229,7 @@ func (c *client) initClient() {
 func (c *client) RegisterUser(user *User) {
 
 	if user.Permissions == nil {
+		go c.JLog(JLogMsg{event:"user_login"})
 		return
 	}
 
