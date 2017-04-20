@@ -96,6 +96,7 @@ type client struct {
 	nc    net.Conn
 	mpay  int
 	ncs   string
+	ip    string
 	bw    *bufio.Writer
 	srv   *Server
 	subs  map[string]*subscription
@@ -211,6 +212,7 @@ func (c *client) initClient() {
 	if ip, ok := c.nc.(*net.TCPConn); ok {
 		addr := ip.RemoteAddr().(*net.TCPAddr)
 		conn = fmt.Sprintf("%s:%d", addr.IP, addr.Port)
+		c.ip = conn
 	}
 
 	switch c.typ {
@@ -237,6 +239,7 @@ func (c *client) RegisterUser(user *User) {
 	// If the endpoint defined the Username, set it here:
 	if user.Username != "" {
 		c.opts.Username = user.Username
+		c.JLog(JLogMsg{event:"user_login"})
 	}
 
 	// Pre-allocate all to simplify checks later.
@@ -504,6 +507,7 @@ func (c *client) processConnect(arg []byte) error {
 func (c *client) authTimeout() {
 	c.sendErr(ErrAuthTimeout.Error())
 	c.Debugf("Authorization Timeout")
+	c.JLog(JLogMsg{event:"authorization_timeout"})
 	c.closeConnection()
 }
 
@@ -516,16 +520,19 @@ func (c *client) authViolation() {
 		c.Errorf(ErrAuthorization.Error())
 	}
 	c.sendErr("Authorization Violation")
+	c.JLog(JLogMsg{event:"authorization_violation"})
 	c.closeConnection()
 }
 
 func (c *client) maxConnExceeded() {
+	c.JLog(JLogMsg{event:"max_connections_exceeded"})
 	c.Errorf(ErrTooManyConnections.Error())
 	c.sendErr(ErrTooManyConnections.Error())
 	c.closeConnection()
 }
 
 func (c *client) maxPayloadViolation(sz int) {
+	c.JLog(JLogMsg{event:"max_payload_exceeded"})
 	c.Errorf("%s: %d vs %d", ErrMaxPayload.Error(), sz, c.mpay)
 	c.sendErr("Maximum Payload Violation")
 	c.closeConnection()
@@ -786,6 +793,7 @@ func (c *client) processSub(argo []byte) (err error) {
 			c.mu.Unlock()
 			c.sendErr(fmt.Sprintf("Permissions Violation for Subscription to %q", sub.subject))
 			c.Errorf("Subscription Violation - User %q, Subject %q", c.opts.Username, sub.subject)
+			c.JLog(JLogMsg{event:"subscription_violation",key:"subject",value:string(sub.subject)})
 			return nil
 		}
 	}
@@ -1302,6 +1310,7 @@ func (c *client) closeConnection() {
 		return
 	}
 
+
 	c.Debugf("%s connection closed", c.typeString())
 
 	c.clearAuthTimer()
@@ -1326,6 +1335,8 @@ func (c *client) closeConnection() {
 	if srv != nil {
 		// Unregister
 		srv.removeClient(c)
+
+		c.JLog(JLogMsg{event:"user_disconnected"})
 
 		// Remove clients subscriptions.
 		for _, sub := range subs {
@@ -1373,6 +1384,21 @@ func (c *client) closeConnection() {
 }
 
 // Logging functionality scoped to a client or route.
+
+// Log Messages in JSON for ELK to index
+type JLogMsg struct {
+	event    string
+	key      string
+	value    string
+}
+func (c *client) JLog( msg JLogMsg ){
+	msgStr := "{\"app\":\"gnatsd\",\"event\":\""+msg.event+"\",\"user\":\""+c.opts.Username+"\",\"ip\":\""+c.ip+"\""
+	if msg.key != "" && msg.value != "" {
+		msgStr += ",\""+msg.key+"\":\""+msg.value+"\""
+	}
+	msgStr += "}"
+	fmt.Println(msgStr)
+}
 
 func (c *client) Errorf(format string, v ...interface{}) {
 	format = fmt.Sprintf("%s - %s", c, format)
